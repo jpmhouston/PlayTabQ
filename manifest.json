@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "Tab Play Queue",
+  "version": "1.0",
+  "description": "Use a sequence of video tabs as a play queue.",
+  "icons": {
+    "96": "extensionicon.svg"
+  },
+  "permissions": ["storage", "tabs"],
+  
+  "background": {
+    "scripts": ["background.js"]
+  },
+  
+  "browser_action": {
+    "default_icon": { "32": "toolbaricon-off-32.png" },
+    "default_title": "Play Tab Queue"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["https://*.youtube.com/watch*"],
+      "js": ["detector.js"]
+    }
+  ]
+}
