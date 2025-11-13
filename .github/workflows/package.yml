@@ -1,0 +1,100 @@
+# Copyright (c) 2025 Pierre Houston, Bananameter Labs. All rights reversed.
+name: Package
+
+on:
+  create:
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        description: "Version to title release with (like: 1.0rc3), blank for the latest tag version"
+        type: string
+        required: false
+      githubRelease:
+        description: "Create GitHub Release (requires a existing tag matching the version, like: v1.0rc3)"
+        type: boolean
+        required: true
+        default: true
+env:
+  branch: main
+  buildzip: PlayTabQueue.zip
+
+jobs:
+  build:
+    name: Package into Zip File
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # required for 'git show-ref --tags' to work
+          ref: "${{ env.branch }}"
+      
+      - name: Validate version
+        id: version
+        run: |
+          echo "- Parse trigger"
+          
+          if [[ "${{ github.event_name }}" == workflow_dispatch ]] ; then
+            # triggered manually
+            
+            if [[ "${{ github.ref }}" != "refs/heads/${{ env.branch }}" ]] ; then
+              echo "::error::Manually triggered workflow supports ${{ env.branch }} only, gihub.ref == ${{ github.ref }})"
+              exit 1
+            fi
+            if [[ -n "${{ inputs.releaseVersion }}" ]] ; then
+              version="${{ inputs.releaseVersion }}"
+              tag=$(git show-ref --tags | sed -n 's/.* refs\/tags\/\(v'$version'\)$/\1/p')
+            else
+              version=$(git show-ref --tags | tail -n 1 | sed 's/.* refs\/tags\/v\(.*\)/\1/')
+              if [[ -z "$version" ]]; then
+                echo "::error::Cannot find version for manually triggered workflow"
+                exit 1
+              fi
+              tag="v$version"
+            fi
+            if [[ "${{ inputs.githubRelease }}" == "true" ]] ; then
+              draftrelease="true"
+            else
+              draftrelease="false"
+            fi
+            
+          elif [[ "${{ github.ref }}" == refs/tags/* ]] ; then
+            # triggered by pushing a tag
+            
+            ref="${{ github.ref }}"
+            version="${ref:11}" # magic number 11 being the length of "refs/tags/v", stripping that to leave just the version
+            tag="${ref:10}" # same as above, but including the "v" preceeding the version number
+            draftrelease="true"
+            
+          else
+            echo "::error::Not triggered manually or by a tag (github.event_name == ${{ github.event_name }}, gihub.ref == ${{ github.ref }})"
+            exit 1
+          fi
+          
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "draftrelease=$draftrelease" >> $GITHUB_OUTPUT
+      
+      - name: Archive Extension
+        uses: cardinalby/webext-buildtools-pack-extension-dir-action@v1
+        with:
+          extensionDir: .
+          zipFilePath: "${{ env.buildzip }}"
+      
+      - name: Save Zip as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ env.buildzip }}" 
+          path: "${{ env.buildzip }}" 
+      
+      - name: Draft Tagged Release
+        if: ${{ success() && steps.vesion.outputs.draftrelease == 'true' && steps.vesion.outputs.tag != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Play Tab Queue ${{ steps.version.outputs.version }}"
+          tag_name: ${{ steps.version.outputs.tag }}
+          draft: true
+          prerelease: true
+          files: "${{ env.buildzip }}" 
+          fail_on_unmatched_files: true
