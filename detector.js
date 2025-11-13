@@ -1,5 +1,5 @@
 // PlayTabQ
-// Copyright 2025 Bananameter Labs
+// Copyright © 2025 Pierre Houston, Bananameter Labs. All rights reserved.
 
 // Aattach the necessary event listeners to the page's video element.
 function addListeners() {

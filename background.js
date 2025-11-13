@@ -1,5 +1,5 @@
 // PlayTabQ
-// Copyright 2025 Bananameter Labs
+// Copyright © 2025 Pierre Houston, Bananameter Labs. All rights reserved.
 
 const icons = {
   enabled: "toolbaricon-on-32.png",

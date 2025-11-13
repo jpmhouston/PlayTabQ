@@ -1,5 +1,5 @@
 // PlayTabQ
-// Copyright 2025 Bananameter Labs
+// Copyright © 2025 Pierre Houston, Bananameter Labs. All rights reserved.
 
 const toggleEnable = document.getElementById('toggle-enable');
 const toggleCloseTabs = document.getElementById('toggle-close-tabs');
