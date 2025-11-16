@@ -32,6 +32,7 @@ async function videoEndedInTab(currentTab) {
   // Do nothing if enabled switch is off.
   const storage = await browser.storage.local.get(["isEnabled", "rightToLeft", "closeTabsAutomatically"]);
   if (storage.isEnabled !== true) {
+    console.log("Video ended function called but enabled flag is off. Aborting auto-switch.");
     return
   }
   
@@ -123,12 +124,12 @@ function tellTabToPlayOnceItLoads(tab) {
 // --- Event Listeners ---
 
 browser.browserAction.onClicked.addListener((tab, onClickData) => {
-  console.log("Toolbar icon clicked on tab:", tab.id);
-  console.log("Modifier keys held:", onClickData.modifiers); // This is an array, e.g., ["Shift"]
+  //console.log("Toolbar icon clicked on tab:", tab.id);
+  //console.log("Modifier keys held:", onClickData.modifiers); // This is an array, e.g., ["Shift"]
 
   // Toggle on-off when a Ctrl-click (or Command on Mac) detected
   if (onClickData.modifiers.includes("Ctrl") || onClickData.modifiers.includes("Command")) {
-    console.log("Ctrl/Command-click detected! Performing another action.");
+    //console.log("Ctrl/Command-click detected! Performing another action.");
     browser.storage.local.get("isEnabled").then(result => {
       const newState = !(result.isEnabled !== false);
       browser.storage.local.set({ isEnabled: newState });
@@ -138,7 +139,7 @@ browser.browserAction.onClicked.addListener((tab, onClickData) => {
   }
 
   // Open the popup menu when its a normal click (no modifiers)
-  console.log("Normal click detected! Performing default action.");
+  //console.log("Normal click detected! Performing default action.");
   browser.browserAction.setPopup({
     popup: "popup.html"
   });
